@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}About — Flower Classification{% endblock %}
+
+{% block content %}
+
+<section class="about-section">
+  <div class="container">
+
+    <div class="about-card">
+      <h2 class="about-title">🌿 About the Project</h2>
+      <p class="about-lead">
+        This application uses a <strong>pretrained Deep Learning model</strong> developed with
+        <strong>PyTorch</strong> to classify flower images into different flower categories.
+      </p>
+
+      <div class="about-grid">
+
+        <div class="about-block">
+          <h3 class="about-block-title">How It Works</h3>
+          <ol class="about-steps">
+            <li>The user uploads a flower image through the web interface.</li>
+            <li>The image is sent to the Flask backend server.</li>
+            <li>The image is validated and preprocessed (resize, normalize).</li>
+            <li>It is converted into a PyTorch tensor and passed to the trained neural network.</li>
+            <li>The model predicts the flower class and returns probabilities.</li>
+            <li>The result page displays the predicted class and confidence score.</li>
+          </ol>
+        </div>
+
+        <div class="about-block">
+          <h3 class="about-block-title">Technologies Used</h3>
+          <ul class="about-tech">
+            <li><span class="tech-dot">🐍</span> Python</li>
+            <li><span class="tech-dot">🔥</span> PyTorch &amp; Torchvision</li>
+            <li><span class="tech-dot">🌐</span> Flask</li>
+            <li><span class="tech-dot">🖼️</span> Pillow (PIL)</li>
+            <li><span class="tech-dot">📄</span> HTML5 &amp; CSS3</li>
+            <li><span class="tech-dot">⚡</span> JavaScript</li>
+            <li><span class="tech-dot">🎨</span> Jinja2 Templates</li>
+          </ul>
+        </div>
+
+        <div class="about-block">
+          <h3 class="about-block-title">Model Details</h3>
+          <ul class="about-tech">
+            <li><span class="tech-dot">🧠</span> Architecture: ResNet18 (fine-tuned)</li>
+            <li><span class="tech-dot">📦</span> Input Size: 224 × 224 px</li>
+            <li><span class="tech-dot">🌸</span> Output Classes: 5 flower types</li>
+            <li><span class="tech-dot">📊</span> Activation: Softmax</li>
+            <li><span class="tech-dot">🎯</span> Framework: PyTorch</li>
+          </ul>
+        </div>
+
+        <div class="about-block">
+          <h3 class="about-block-title">Supported Flowers</h3>
+          <div class="flower-list">
+            <span class="flower-chip">🌼 Daisy</span>
+            <span class="flower-chip">🌻 Dandelion</span>
+            <span class="flower-chip">🌹 Rose</span>
+            <span class="flower-chip">🌻 Sunflower</span>
+            <span class="flower-chip">🌷 Tulip</span>
+          </div>
+        </div>
+
+      </div><!-- /.about-grid -->
+
+      <div class="disclaimer">
+        <strong>Note:</strong> This project is developed for academic/educational purposes.
+        Predictions are based on the trained model and may not be scientifically accurate in all cases.
+      </div>
+
+    </div><!-- /.about-card -->
+
+  </div>
+</section>
+
+{% endblock %}

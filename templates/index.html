@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Flower Classification — Home{% endblock %}
+
+{% block content %}
+
+<!-- ════════════ HERO ════════════ -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <h1 class="hero-title">Identify Flowers<br /><span class="accent">Using Deep Learning</span></h1>
+      <p class="hero-subtitle">
+        Upload a flower image and let our deep learning model identify its class instantly.
+      </p>
+    </div>
+    <div class="hero-badges">
+      <span class="badge">🌸 PyTorch</span>
+      <span class="badge">🌿 ResNet</span>
+      <span class="badge">🌼 Flask</span>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ UPLOAD CARD ════════════ -->
+<section class="upload-section">
+  <div class="container">
+    <div class="upload-card">
+
+      <div class="upload-card-header">
+        <div class="flower-icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="flower-svg">
+            <circle cx="50" cy="50" r="12" fill="#c49a6c"/>
+            <ellipse cx="50" cy="22" rx="10" ry="16" fill="#e8b89a" opacity="0.85"/>
+            <ellipse cx="50" cy="78" rx="10" ry="16" fill="#e8b89a" opacity="0.85"/>
+            <ellipse cx="22" cy="50" rx="16" ry="10" fill="#e8b89a" opacity="0.85"/>
+            <ellipse cx="78" cy="50" rx="16" ry="10" fill="#e8b89a" opacity="0.85"/>
+            <ellipse cx="29" cy="29" rx="10" ry="16" fill="#dba47e" opacity="0.75" transform="rotate(45 29 29)"/>
+            <ellipse cx="71" cy="29" rx="10" ry="16" fill="#dba47e" opacity="0.75" transform="rotate(-45 71 29)"/>
+            <ellipse cx="29" cy="71" rx="10" ry="16" fill="#dba47e" opacity="0.75" transform="rotate(-45 29 71)"/>
+            <ellipse cx="71" cy="71" rx="10" ry="16" fill="#dba47e" opacity="0.75" transform="rotate(45 71 71)"/>
+            <circle cx="50" cy="50" r="10" fill="#a0522d"/>
+          </svg>
+        </div>
+        <h2 class="upload-title">Upload Flower Image</h2>
+        <p class="upload-subtitle">JPG, JPEG, or PNG &mdash; Max 16 MB</p>
+      </div>
+
+      <!-- Upload Form -->
+      <form id="upload-form" action="{{ url_for('predict_route') }}" method="POST" enctype="multipart/form-data">
+
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" name="file" accept=".jpg,.jpeg,.png" class="file-input-hidden" />
+
+          <div class="drop-zone-content" id="drop-zone-content">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0L8 8m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="drop-text">Drag &amp; drop your image here</p>
+            <span class="drop-or">or</span>
+            <label for="file-input" class="btn btn-outline">Browse Image</label>
+          </div>
+
+          <!-- Image Preview (hidden until file selected) -->
+          <div class="preview-wrapper" id="preview-wrapper" style="display:none;">
+            <img id="preview-image" src="#" alt="Preview" class="preview-img" />
+            <p class="preview-name" id="preview-name"></p>
+            <button type="button" class="btn-remove" id="remove-btn" title="Remove image">✕ Remove</button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-full" id="classify-btn" disabled>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" stroke-linecap="round"/>
+          </svg>
+          Classify Flower
+        </button>
+
+      </form>
+
+    </div><!-- /.upload-card -->
+
+    <!-- Supported flowers label strip -->
+    <div class="flowers-strip">
+      <p class="strip-label">Supported Flowers</p>
+      <div class="strip-pills">
+        <span class="pill">🌼 Daisy</span>
+        <span class="pill">🌻 Dandelion</span>
+        <span class="pill">🌹 Rose</span>
+        <span class="pill">🌻 Sunflower</span>
+        <span class="pill">🌷 Tulip</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loading-overlay" style="display:none;">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p>Classifying your flower…</p>
+  </div>
+</div>
+
+{% endblock %}

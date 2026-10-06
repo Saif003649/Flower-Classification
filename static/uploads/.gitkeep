@@ -1,0 +1,3 @@
+This folder stores uploaded flower images temporarily during prediction.
+It is auto-created by app.py on startup.
+You can safely clear this folder at any time.

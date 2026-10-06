@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Prediction Result — Flower Classification{% endblock %}
+
+{% block content %}
+
+<section class="result-section">
+  <div class="container">
+
+    <div class="result-card">
+
+      <!-- Header -->
+      <div class="result-header">
+        <h2 class="result-title">🌸 Prediction Result</h2>
+        <p class="result-subtitle">Here is what our deep learning model identified</p>
+      </div>
+
+      <!-- Image + Prediction Grid -->
+      <div class="result-grid">
+
+        <!-- Uploaded Image -->
+        <div class="result-image-wrap">
+          <p class="result-image-label">Uploaded Image</p>
+          <img src="{{ image_url }}" alt="Uploaded flower image" class="result-image" />
+        </div>
+
+        <!-- Prediction Details -->
+        <div class="result-details">
+
+          <div class="prediction-badge">
+            <span class="prediction-icon">🌺</span>
+          </div>
+
+          <p class="pred-label">Predicted Flower</p>
+          <h1 class="pred-class">{{ class_name }}</h1>
+
+          <div class="confidence-block">
+            <div class="conf-header">
+              <span class="conf-label">Model Confidence</span>
+              <span class="conf-value">{{ confidence }}%</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="conf-bar-bg">
+              <div class="conf-bar-fill" id="conf-bar" style="width: 0%;" data-target="{{ confidence }}"></div>
+            </div>
+
+            <!-- Confidence interpretation -->
+            {% if confidence >= 85 %}
+              <p class="conf-note high">✅ High confidence prediction</p>
+            {% elif confidence >= 60 %}
+              <p class="conf-note medium">⚠️ Moderate confidence — result may vary</p>
+            {% else %}
+              <p class="conf-note low">❗ Low confidence — try a clearer image</p>
+            {% endif %}
+          </div>
+
+          <a href="{{ url_for('index') }}" class="btn btn-primary btn-try">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Try Another Image
+          </a>
+
+        </div>
+      </div><!-- /.result-grid -->
+
+    </div><!-- /.result-card -->
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  /* Animate the confidence bar on page load */
+  window.addEventListener("load", function () {
+    const bar = document.getElementById("conf-bar");
+    if (bar) {
+      const target = parseFloat(bar.getAttribute("data-target"));
+      setTimeout(function () {
+        bar.style.width = target + "%";
+      }, 200);
+    }
+  });
+</script>
+{% endblock %}

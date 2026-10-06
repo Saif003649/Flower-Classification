@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Flower Classification{% endblock %}</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- ════════════ NAVBAR ════════════ -->
+  <header class="navbar">
+    <div class="navbar-inner container">
+
+      <a href="{{ url_for('index') }}" class="navbar-brand">
+        <span class="brand-icon">🌸</span>
+        <span class="brand-text">Flower<span class="brand-accent">AI</span></span>
+      </a>
+
+      <nav class="navbar-links">
+        <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a>
+        <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">About</a>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- ════════════ FLASH MESSAGES ════════════ -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container container">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            <span>{{ message }}</span>
+            <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- ════════════ MAIN CONTENT ════════════ -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ════════════ FOOTER ════════════ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p class="footer-text">
+        🌼 Flower Classification &nbsp;|&nbsp; Deep Learning Project &nbsp;|&nbsp; PyTorch + Flask
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>
