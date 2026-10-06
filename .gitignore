@@ -25,5 +25,3 @@ env/
 .DS_Store
 Thumbs.db
 
-# Large datasets
-dataset/
