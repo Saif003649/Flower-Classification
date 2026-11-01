@@ -1,27 +1,99 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*.pyo
+*$py.class
 
-# Virtual environment
+# C extensions
+*.so
+# Flower dataset
+data/flowers-102/
+data/*.tgz
+
+# Python environment
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Temporary files
+.pytest_cache/
+.env
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
 venv/
 .venv/
 env/
+ENV/
+env.bak/
+venv.bak/
 
-# Jupyter
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+*/.ipynb_checkpoints/*
 
-# Environment variables
+# Datasets and downloaded data splits (e.g. Oxford Flowers 102)
+data/
+*.tgz
+*.tar.gz
+*.zip
+
+# User uploaded images & session files (preserve .gitkeep)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Model weights and checkpoints (preserve project baseline checkpoint)
+*.safetensors
+*.bin
+!model/flower_classification_model.pth
+
+# Logs and runtime outputs
+*.log
+*.sqlite
+*.sqlite3
+
+# Environment variables & secrets
 .env
 .env.*
+!.env.example
 
-# IDE
+# IDE and Editor configurations
 .vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
 
-# Logs
-*.log
-
-# OS
+# Operating System files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+[Dd]esktop.ini
 
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/

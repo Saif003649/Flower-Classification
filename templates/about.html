@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}About — Flower Classification{% endblock %}
+{% block title %}About &amp; Models — Flower Classification{% endblock %}
 
 {% block content %}
 
@@ -7,66 +7,144 @@
   <div class="container">
 
     <div class="about-card">
-      <h2 class="about-title">🌿 About the Project</h2>
-      <p class="about-lead">
-        This application uses a <strong>pretrained Deep Learning model</strong> developed with
-        <strong>PyTorch</strong> to classify flower images into different flower categories.
-      </p>
+      <div class="about-header">
+        <span class="about-badge">System Architecture &amp; Methodology</span>
+        <h1 class="about-title">About the Flower Classification System</h1>
+        <p class="about-lead">
+          This application integrates dual Deep Learning architectures developed with
+          <strong>PyTorch</strong> and <strong>Hugging Face Transformers</strong> to classify images across 
+          <strong>102 Oxford Flower species</strong>.
+        </p>
+      </div>
 
+      <!-- Benchmark Summary Table (from Phase 6) -->
+      <div class="about-benchmark-card">
+        <div class="benchmark-header">
+          <span class="benchmark-icon">📊</span>
+          <div>
+            <h2 class="benchmark-title">Phase 6 Official Benchmark Results</h2>
+            <p class="benchmark-subtitle">Evaluated on the official Oxford Flowers 102 test partition (6,149 images)</p>
+          </div>
+        </div>
+
+        <div class="benchmark-table-responsive">
+          <table class="benchmark-table">
+            <thead>
+              <tr>
+                <th>Metric / Property</th>
+                <th>Vision Transformer (ViT-Base)</th>
+                <th>Custom CNN (PyTorch)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Model Architecture</strong></td>
+                <td>12-Layer Transformer (Self-Attention)</td>
+                <td>2-Block Convolutional Net + MLP</td>
+              </tr>
+              <tr>
+                <td><strong>Parameter Count</strong></td>
+                <td>86,567,642 (~86.6 M)</td>
+                <td>12,863,430 (~12.9 M)</td>
+              </tr>
+              <tr>
+                <td><strong>Checkpoint Size</strong></td>
+                <td>~328 MB</td>
+                <td>49.07 MB</td>
+              </tr>
+              <tr>
+                <td><strong>Top-1 Accuracy</strong></td>
+                <td><span class="score-highlight-vit">99.72%</span></td>
+                <td>5.68%</td>
+              </tr>
+              <tr>
+                <td><strong>Top-5 Accuracy</strong></td>
+                <td><span class="score-highlight-vit">100.00%</span></td>
+                <td>10.77%</td>
+              </tr>
+              <tr>
+                <td><strong>Macro-F1 Score</strong></td>
+                <td><span class="score-highlight-vit">99.74%</span></td>
+                <td>7.84%</td>
+              </tr>
+              <tr>
+                <td><strong>Inference Latency (CPU)</strong></td>
+                <td>~213 ms / image</td>
+                <td><span class="score-highlight-cnn">6.76 ms / image (~31&times; faster)</span></td>
+              </tr>
+              <tr>
+                <td><strong>Recommended Use</strong></td>
+                <td>High-precision botanical identification</td>
+                <td>Lightweight real-time baseline</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Architectural Details Grid -->
       <div class="about-grid">
 
+        <!-- Block 1: How It Works -->
         <div class="about-block">
+          <div class="about-block-icon">⚙️</div>
           <h3 class="about-block-title">How It Works</h3>
           <ol class="about-steps">
-            <li>The user uploads a flower image through the web interface.</li>
-            <li>The image is sent to the Flask backend server.</li>
-            <li>The image is validated and preprocessed (resize, normalize).</li>
-            <li>It is converted into a PyTorch tensor and passed to the trained neural network.</li>
-            <li>The model predicts the flower class and returns probabilities.</li>
-            <li>The result page displays the predicted class and confidence score.</li>
+            <li>User selects an architecture (ViT or CNN) and submits a flower photograph.</li>
+            <li>Flask verifies image integrity and applies the model-specific tensor preprocessing.</li>
+            <li>Inference executes with <code>torch.inference_mode()</code> and <code>model.eval()</code>.</li>
+            <li>Softmax probabilities compute the top predicted species and ranked candidate scores.</li>
+            <li>Output labels are decoded through the verified Oxford 102 label mapping.</li>
           </ol>
         </div>
 
+        <!-- Block 2: Tech Stack -->
         <div class="about-block">
+          <div class="about-block-icon">💻</div>
           <h3 class="about-block-title">Technologies Used</h3>
           <ul class="about-tech">
-            <li><span class="tech-dot">🐍</span> Python</li>
-            <li><span class="tech-dot">🔥</span> PyTorch &amp; Torchvision</li>
-            <li><span class="tech-dot">🌐</span> Flask</li>
-            <li><span class="tech-dot">🖼️</span> Pillow (PIL)</li>
-            <li><span class="tech-dot">📄</span> HTML5 &amp; CSS3</li>
-            <li><span class="tech-dot">⚡</span> JavaScript</li>
-            <li><span class="tech-dot">🎨</span> Jinja2 Templates</li>
+            <li><span class="tech-dot">🐍</span> <strong>Python 3.13:</strong> Modern runtime environment</li>
+            <li><span class="tech-dot">⚡</span> <strong>Hugging Face Transformers:</strong> Vision Transformer pipeline</li>
+            <li><span class="tech-dot">🔥</span> <strong>PyTorch &amp; Torchvision:</strong> Deep learning compute engine</li>
+            <li><span class="tech-dot">🌐</span> <strong>Flask:</strong> Secure lightweight web server</li>
+            <li><span class="tech-dot">🖼️</span> <strong>Pillow (PIL):</strong> Image validation and normalization</li>
+            <li><span class="tech-dot">🎨</span> <strong>HTML5 / Modern CSS:</strong> Responsive design system</li>
+            <li><span class="tech-dot">🔒</span> <strong>Session Storage:</strong> Browser-only prediction history</li>
           </ul>
         </div>
 
+        <!-- Block 3: Vision Transformer -->
         <div class="about-block">
-          <h3 class="about-block-title">Model Details</h3>
+          <div class="about-block-icon">⚡</div>
+          <h3 class="about-block-title">Vision Transformer (ViT-Base)</h3>
           <ul class="about-tech">
-            <li><span class="tech-dot">🧠</span> Architecture: ResNet18 (fine-tuned)</li>
-            <li><span class="tech-dot">📦</span> Input Size: 224 × 224 px</li>
-            <li><span class="tech-dot">🌸</span> Output Classes: 5 flower types</li>
-            <li><span class="tech-dot">📊</span> Activation: Softmax</li>
-            <li><span class="tech-dot">🎯</span> Framework: PyTorch</li>
+            <li><span class="tech-dot">🧠</span> <strong>Repository:</strong> <code>loretyan/vit-base-oxford-flowers-102</code></li>
+            <li><span class="tech-dot">🔍</span> <strong>Architecture:</strong> Vision Transformer (12 layers, 12 attention heads)</li>
+            <li><span class="tech-dot">📦</span> <strong>Patch Size:</strong> 16 &times; 16 patches over 224 &times; 224 px</li>
+            <li><span class="tech-dot">🌸</span> <strong>Classes:</strong> 102 Oxford Flower categories</li>
+            <li><span class="tech-dot">🏷️</span> <strong>Decoding:</strong> Semantic name-aligned <code>id2label</code> lookup</li>
           </ul>
         </div>
 
+        <!-- Block 4: Custom CNN -->
         <div class="about-block">
-          <h3 class="about-block-title">Supported Flowers</h3>
-          <div class="flower-list">
-            <span class="flower-chip">🌼 Daisy</span>
-            <span class="flower-chip">🌻 Dandelion</span>
-            <span class="flower-chip">🌹 Rose</span>
-            <span class="flower-chip">🌻 Sunflower</span>
-            <span class="flower-chip">🌷 Tulip</span>
-          </div>
+          <div class="about-block-icon">🧠</div>
+          <h3 class="about-block-title">Custom CNN (PyTorch Baseline)</h3>
+          <ul class="about-tech">
+            <li><span class="tech-dot">🧠</span> <strong>Architecture:</strong> 2 Conv blocks (16&rarr;32 filters) + 2 Linear layers</li>
+            <li><span class="tech-dot">💾</span> <strong>Checkpoint:</strong> <code>model/flower_classification_model.pth</code></li>
+            <li><span class="tech-dot">📦</span> <strong>Preprocessing:</strong> 224 &times; 224 px, ImageNet mean/std normalization</li>
+            <li><span class="tech-dot">🌸</span> <strong>Classes:</strong> 102 Oxford Flower categories</li>
+            <li><span class="tech-dot">⚡</span> <strong>Speed:</strong> Ultra-fast CPU inference (~6.8 ms)</li>
+          </ul>
         </div>
 
       </div><!-- /.about-grid -->
 
+      <!-- Real World & Academic Disclaimer -->
       <div class="disclaimer">
-        <strong>Note:</strong> This project is developed for academic/educational purposes.
-        Predictions are based on the trained model and may not be scientifically accurate in all cases.
+        <strong>Academic &amp; Botanical Disclaimer:</strong>
+        Benchmark accuracy reflects standardized evaluation on the clean Oxford Flowers 102 test set. Real-world images may exhibit variations due to environmental lighting, camera sensor quality, background foliage, or wild botanical hybrids. User uploads are processed temporarily in memory and are never retained permanently.
       </div>
 
     </div><!-- /.about-card -->

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Flower Classification — Home{% endblock %}
+{% block title %}Flower Classification — AI Botanical Identification{% endblock %}
 
 {% block content %}
 
@@ -7,26 +7,29 @@
 <section class="hero">
   <div class="container hero-inner">
     <div class="hero-text">
-      <h1 class="hero-title">Identify Flowers<br /><span class="accent">Using Deep Learning</span></h1>
+      <span class="hero-kicker">Botanical Deep Learning</span>
+      <h1 class="hero-title">Identify Flower Species<br /><span class="accent">with Deep Learning</span></h1>
       <p class="hero-subtitle">
-        Upload a flower image and let our deep learning model identify its class instantly.
+        Upload a flower photo to instantly classify it across 102 Oxford botanical species.
+        Choose between our state-of-the-art Vision Transformer or the lightweight PyTorch CNN baseline.
       </p>
     </div>
     <div class="hero-badges">
-      <span class="badge">🌸 PyTorch</span>
-      <span class="badge">🌿 ResNet</span>
-      <span class="badge">🌼 Flask</span>
+      <span class="badge"><span class="badge-dot vit"></span>⚡ Vision Transformer (99.7% Accuracy)</span>
+      <span class="badge"><span class="badge-dot cnn"></span>🧠 Custom CNN (~6.8 ms Speed)</span>
+      <span class="badge">🌸 102 Oxford Categories</span>
+      <span class="badge">🔒 Browser Session History</span>
     </div>
   </div>
 </section>
 
-<!-- ════════════ UPLOAD CARD ════════════ -->
+<!-- ════════════ UPLOAD & CLASSIFICATION SECTION ════════════ -->
 <section class="upload-section">
   <div class="container">
     <div class="upload-card">
 
       <div class="upload-card-header">
-        <div class="flower-icon-wrapper">
+        <div class="flower-icon-wrapper" aria-hidden="true">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="flower-svg">
             <circle cx="50" cy="50" r="12" fill="#c49a6c"/>
             <ellipse cx="50" cy="22" rx="10" ry="16" fill="#e8b89a" opacity="0.85"/>
@@ -37,69 +40,212 @@
             <ellipse cx="71" cy="29" rx="10" ry="16" fill="#dba47e" opacity="0.75" transform="rotate(-45 71 29)"/>
             <ellipse cx="29" cy="71" rx="10" ry="16" fill="#dba47e" opacity="0.75" transform="rotate(-45 29 71)"/>
             <ellipse cx="71" cy="71" rx="10" ry="16" fill="#dba47e" opacity="0.75" transform="rotate(45 71 71)"/>
-            <circle cx="50" cy="50" r="10" fill="#a0522d"/>
+            <circle cx="50" cy="50" r="9" fill="#8b5e3c"/>
           </svg>
         </div>
-        <h2 class="upload-title">Upload Flower Image</h2>
-        <p class="upload-subtitle">JPG, JPEG, or PNG &mdash; Max 16 MB</p>
+        <h2 class="upload-title">Classify Flower Photo</h2>
+        <p class="upload-subtitle">Drag and drop or browse a photo &bull; JPG, JPEG, or PNG &bull; Max 16 MB</p>
+      </div>
+
+      <!-- Inline Client Error Container -->
+      <div id="client-error-banner" class="client-error-banner" style="display: none;" role="alert">
+        <span class="client-error-icon">⚠️</span>
+        <span id="client-error-text" class="client-error-text"></span>
+        <button type="button" class="client-error-close" id="client-error-close" aria-label="Dismiss">✕</button>
       </div>
 
       <!-- Upload Form -->
-      <form id="upload-form" action="{{ url_for('predict_route') }}" method="POST" enctype="multipart/form-data">
+      <form id="upload-form" action="{{ url_for('predict_route') }}" method="POST" enctype="multipart/form-data" novalidate>
 
-        <!-- Drop Zone -->
-        <div class="drop-zone" id="drop-zone">
-          <input type="file" id="file-input" name="file" accept=".jpg,.jpeg,.png" class="file-input-hidden" />
+        <!-- 1. Intuitive Model Selector -->
+        <fieldset class="model-select-wrapper">
+          <legend class="model-select-label">
+            <span>1. Choose Model Architecture</span>
+            <span class="model-select-hint">Select inference engine</span>
+          </legend>
 
-          <div class="drop-zone-content" id="drop-zone-content">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0L8 8m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <p class="drop-text">Drag &amp; drop your image here</p>
-            <span class="drop-or">or</span>
-            <label for="file-input" class="btn btn-outline">Browse Image</label>
+          <div class="model-options" role="radiogroup" aria-label="Deep Learning Model Selection">
+
+            <!-- ViT Option (Recommended) -->
+            <label class="model-option {% if not vit_available %}disabled{% endif %}" id="label-vit">
+              <input type="radio" name="model_choice" id="model-vit" value="vit"
+                     {% if vit_available %}checked{% else %}disabled{% endif %}
+                     aria-describedby="vit-desc">
+              <div class="model-card-inner">
+                <div class="model-card-top">
+                  <span class="model-badge-top vit-badge">Recommended</span>
+                  <span class="model-metric-pill">99.7% Accuracy</span>
+                </div>
+                <div class="model-title-wrap">
+                  <span class="model-icon">⚡</span>
+                  <span class="model-title">Vision Transformer (ViT-Base)</span>
+                </div>
+                <span class="model-architecture">ViT-Base &bull; 86.6M params</span>
+                <p class="model-desc" id="vit-desc">
+                  Self-attention transformer architecture. Optimal for fine-grained botanical classification.
+                </p>
+              </div>
+            </label>
+
+            <!-- CNN Option (Baseline) -->
+            <label class="model-option {% if not cnn_available %}disabled{% endif %}" id="label-cnn">
+              <input type="radio" name="model_choice" id="model-cnn" value="cnn"
+                     {% if not vit_available and cnn_available %}checked{% endif %}
+                     {% if not cnn_available %}disabled{% endif %}
+                     aria-describedby="cnn-desc">
+              <div class="model-card-inner">
+                <div class="model-card-top">
+                  <span class="model-badge-top cnn-badge">Baseline</span>
+                  <span class="model-metric-pill">~6.8 ms Fast</span>
+                </div>
+                <div class="model-title-wrap">
+                  <span class="model-icon">🧠</span>
+                  <span class="model-title">Custom CNN (PyTorch)</span>
+                </div>
+                <span class="model-architecture">2-Block ConvNet &bull; 12.9M params</span>
+                <p class="model-desc" id="cnn-desc">
+                  Lightweight convolutional baseline. Ultra-fast local CPU inference.
+                </p>
+              </div>
+            </label>
+
           </div>
+        </fieldset>
 
-          <!-- Image Preview (hidden until file selected) -->
-          <div class="preview-wrapper" id="preview-wrapper" style="display:none;">
-            <img id="preview-image" src="#" alt="Preview" class="preview-img" />
-            <p class="preview-name" id="preview-name"></p>
-            <button type="button" class="btn-remove" id="remove-btn" title="Remove image">✕ Remove</button>
-          </div>
+        <!-- 2. Drag & Drop Image Zone -->
+        <div class="upload-step-label">
+          <span>2. Select Flower Image</span>
+          <span class="step-hint" id="step-status">No image selected</span>
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary btn-full" id="classify-btn" disabled>
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" stroke-linecap="round"/>
-          </svg>
-          Classify Flower
-        </button>
+        <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload flower photo by browsing or dragging and dropping">
+          <input type="file" id="file-input" name="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="file-input-hidden" />
+
+          <!-- Default Drop Prompt -->
+          <div class="drop-zone-content" id="drop-zone-content">
+            <div class="upload-icon-circle">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0L8 8m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <p class="drop-text">Drag &amp; drop your flower photo here</p>
+            <span class="drop-or">&mdash; OR &mdash;</span>
+            <label for="file-input" class="btn btn-outline" id="browse-label">Browse Files</label>
+            <span class="drop-help">Supports JPG, JPEG, PNG (up to 16 MB)</span>
+          </div>
+
+          <!-- Image Preview (revealed upon file selection) -->
+          <div class="preview-wrapper" id="preview-wrapper" style="display: none;">
+            <div class="preview-image-container">
+              <img id="preview-image" src="#" alt="Selected flower preview" class="preview-img" />
+              <div class="preview-badge-overlay">Ready for Analysis</div>
+            </div>
+            <div class="preview-meta">
+              <p class="preview-name" id="preview-name">flower.jpg</p>
+              <div class="preview-details">
+                <span class="preview-size" id="preview-size">0 KB</span>
+                <span class="preview-divider">&bull;</span>
+                <span class="preview-type" id="preview-type">Image</span>
+              </div>
+            </div>
+            <div class="preview-actions">
+              <label for="file-input" class="btn btn-sm btn-subtle" title="Choose a different image">
+                🔄 Change Photo
+              </label>
+              <button type="button" class="btn btn-sm btn-remove" id="remove-btn" title="Clear selected image">
+                ✕ Remove
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /.drop-zone -->
+
+        <!-- Form Action Controls -->
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-full" id="classify-btn" disabled>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35" stroke-linecap="round"/>
+            </svg>
+            <span id="classify-btn-text">Classify Flower</span>
+          </button>
+
+          <button type="button" class="btn btn-ghost btn-reset" id="reset-all-btn" style="display: none;">
+            <span>Clear / Reset</span>
+          </button>
+        </div>
 
       </form>
 
     </div><!-- /.upload-card -->
 
-    <!-- Supported flowers label strip -->
+    <!-- ════════════ SESSION HISTORY COMPONENT ════════════ -->
+    <div class="history-section" id="history-section" style="display: none;">
+      <div class="history-card">
+        <div class="history-header">
+          <div class="history-title-wrap">
+            <span class="history-icon" aria-hidden="true">🕒</span>
+            <div>
+              <h3 class="history-title">Current Session History</h3>
+              <p class="history-subtitle">Recent classifications saved in your browser session (cleared on tab close)</p>
+            </div>
+          </div>
+          <div class="history-header-actions">
+            <span class="history-count-badge" id="history-count">0 items</span>
+            <button type="button" class="btn btn-sm btn-outline-danger" id="clear-history-btn" title="Clear all history in this browser session">
+              <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Clear History
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic History Grid -->
+        <div class="history-grid" id="history-grid">
+          <!-- Populated dynamically from sessionStorage via script.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Supported Flowers Label Strip -->
     <div class="flowers-strip">
-      <p class="strip-label">Supported Flowers</p>
+      <div class="strip-header">
+        <span class="strip-title">Sample of 102 Supported Oxford Flower Categories</span>
+      </div>
       <div class="strip-pills">
-        <span class="pill">🌼 Daisy</span>
-        <span class="pill">🌻 Dandelion</span>
+        <span class="pill">🌸 Balloon Flower</span>
+        <span class="pill">🌺 Passion Flower</span>
+        <span class="pill">🌼 Pink Primrose</span>
         <span class="pill">🌹 Rose</span>
         <span class="pill">🌻 Sunflower</span>
-        <span class="pill">🌷 Tulip</span>
+        <span class="pill">🌷 Siam Tulip</span>
+        <span class="pill">🪷 Lotus</span>
+        <span class="pill">🌿 King Protea</span>
+        <span class="pill">🌾 Hibiscus</span>
+        <span class="pill">💐 Sweet Pea</span>
+        <span class="pill pill-more">+92 More Botanical Species</span>
       </div>
     </div>
 
   </div>
 </section>
 
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loading-overlay" style="display:none;">
+<!-- ════════════ LOADING OVERLAY ════════════ -->
+<div class="loading-overlay" id="loading-overlay" style="display: none;" role="dialog" aria-modal="true" aria-label="Classifying flower">
   <div class="loading-box">
-    <div class="spinner"></div>
-    <p>Classifying your flower…</p>
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <span class="spinner-center-icon">🌸</span>
+    </div>
+    <div class="loading-text-group">
+      <h3 class="loading-title" id="loading-title">Classifying Flower...</h3>
+      <p class="loading-subtitle" id="loading-subtitle">Evaluating image across 102 Oxford botanical categories</p>
+    </div>
+    <div class="loading-bar">
+      <div class="loading-bar-indeterminate"></div>
+    </div>
+    <p class="loading-note">Running inference in evaluation mode &bull; Please wait</p>
   </div>
 </div>
 

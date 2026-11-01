@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI Flower Classification System using Vision Transformer (ViT) and PyTorch CNN across 102 Oxford Flower species." />
+  <meta name="theme-color" content="#8b5e3c" />
   <title>{% block title %}Flower Classification{% endblock %}</title>
 
-  <!-- Google Fonts -->
+  <!-- Google Fonts: Playfair Display for editorial elegance + Plus Jakarta Sans for clean modern UI -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
@@ -18,17 +20,29 @@
 <body>
 
   <!-- ════════════ NAVBAR ════════════ -->
-  <header class="navbar">
+  <header class="navbar" id="top-navbar">
     <div class="navbar-inner container">
 
-      <a href="{{ url_for('index') }}" class="navbar-brand">
+      <a href="{{ url_for('index') }}" class="navbar-brand" aria-label="FlowerAI Home">
         <span class="brand-icon">🌸</span>
         <span class="brand-text">Flower<span class="brand-accent">AI</span></span>
+        <span class="brand-tag">Dual-Engine</span>
       </a>
 
-      <nav class="navbar-links">
-        <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a>
-        <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">About</a>
+      <nav class="navbar-links" aria-label="Primary navigation">
+        <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Home
+        </a>
+        <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4m0-4h.01" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          About &amp; Models
+        </a>
       </nav>
 
     </div>
@@ -37,11 +51,20 @@
   <!-- ════════════ FLASH MESSAGES ════════════ -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div class="flash-container container">
+      <div class="flash-container container" id="flash-container" role="alert">
         {% for category, message in messages %}
           <div class="flash flash-{{ category }}">
-            <span>{{ message }}</span>
-            <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+            <div class="flash-content">
+              {% if category == 'error' %}
+                <span class="flash-icon">⚠️</span>
+              {% elif category == 'warning' %}
+                <span class="flash-icon">⚡</span>
+              {% else %}
+                <span class="flash-icon">✅</span>
+              {% endif %}
+              <span class="flash-text">{{ message }}</span>
+            </div>
+            <button class="flash-close" type="button" aria-label="Dismiss alert" onclick="this.closest('.flash').remove()">✕</button>
           </div>
         {% endfor %}
       </div>
@@ -49,15 +72,24 @@
   {% endwith %}
 
   <!-- ════════════ MAIN CONTENT ════════════ -->
-  <main>
+  <main id="main-content">
     {% block content %}{% endblock %}
   </main>
 
   <!-- ════════════ FOOTER ════════════ -->
   <footer class="footer">
     <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="footer-logo">🌸 FlowerAI</span>
+        <span class="footer-sub">Deep Learning Botanical Species Classification</span>
+      </div>
+      <div class="footer-meta">
+        <span class="footer-chip">⚡ Vision Transformer (ViT)</span>
+        <span class="footer-chip">🧠 Custom PyTorch CNN</span>
+        <span class="footer-chip">102 Oxford Species</span>
+      </div>
       <p class="footer-text">
-        🌼 Flower Classification &nbsp;|&nbsp; Deep Learning Project &nbsp;|&nbsp; PyTorch + Flask
+        &copy; Flower Classification Project &nbsp;|&nbsp; Built with PyTorch, Hugging Face Transformers &amp; Flask
       </p>
     </div>
   </footer>

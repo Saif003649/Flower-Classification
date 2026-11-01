@@ -1,0 +1,16 @@
+{
+  "model_id": "loretyan/vit-base-oxford-flowers-102",
+  "dataset": "Oxford Flowers 102 (test split)",
+  "total_test_samples": 6149,
+  "raw_metrics": {
+    "top1_accuracy": 96.28,
+    "top5_accuracy": 96.67,
+    "macro_f1": 94.85
+  },
+  "semantic_aligned_metrics": {
+    "top1_accuracy": 99.72,
+    "top5_accuracy": 100.0,
+    "macro_f1": 99.74
+  },
+  "execution_time_seconds": 1307.99
+}

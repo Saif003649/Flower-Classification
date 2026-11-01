@@ -1,0 +1,11 @@
+metric,cnn_value,vit_value
+top1_accuracy_pct,5.6757,99.72
+top5_accuracy_pct,10.766,100.0
+macro_precision_pct,8.0953,
+macro_recall_pct,8.0577,
+macro_f1_pct,7.838,99.74
+avg_inference_ms_per_image,6.7645,
+median_inference_ms_per_image,5.8263,
+rss_before_inference_mb,-1.0,
+rss_after_inference_mb,-1.0,
+tracemalloc_peak_mb,3.06,

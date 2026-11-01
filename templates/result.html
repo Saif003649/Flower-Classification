@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Prediction Result — Flower Classification{% endblock %}
+{% block title %}{{ class_name }} — Flower Classification Result{% endblock %}
 
 {% block content %}
 
@@ -8,63 +8,173 @@
 
     <div class="result-card">
 
-      <!-- Header -->
+      <!-- Result Card Header -->
       <div class="result-header">
-        <h2 class="result-title">🌸 Prediction Result</h2>
-        <p class="result-subtitle">Here is what our deep learning model identified</p>
+        <div class="result-status-badge">
+          <span class="status-dot"></span> Prediction Complete
+        </div>
+        <h1 class="result-title">Classification Result</h1>
+        <p class="result-subtitle">Evaluated against the official 102 Oxford Flower categories</p>
       </div>
 
-      <!-- Image + Prediction Grid -->
+      <!-- Result Grid (2 columns on desktop, 1 on mobile) -->
       <div class="result-grid">
 
-        <!-- Uploaded Image -->
-        <div class="result-image-wrap">
-          <p class="result-image-label">Uploaded Image</p>
-          <img src="{{ image_url }}" alt="Uploaded flower image" class="result-image" />
-        </div>
-
-        <!-- Prediction Details -->
-        <div class="result-details">
-
-          <div class="prediction-badge">
-            <span class="prediction-icon">🌺</span>
+        <!-- Column 1: Image & Action -->
+        <div class="result-image-column">
+          <div class="result-image-card">
+            <div class="result-image-header">
+              <span class="result-image-tag">Analyzed Photograph</span>
+              <span class="result-image-model-pill">
+                {% if model_choice == 'vit' %}⚡ ViT-Base{% else %}🧠 Custom CNN{% endif %}
+              </span>
+            </div>
+            <div class="result-image-wrap">
+              <img src="{{ image_url }}" alt="Uploaded flower: {{ class_name }}" class="result-image" id="result-img-view" />
+            </div>
+            <div class="result-image-footer">
+              <span class="footer-hint">Zero permanent server retention</span>
+            </div>
           </div>
 
-          <p class="pred-label">Predicted Flower</p>
-          <h1 class="pred-class">{{ class_name }}</h1>
+          <!-- Quick Action Buttons -->
+          <div class="result-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-full" id="try-another-btn">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Classify Another Image
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-ghost btn-full" onclick="sessionStorage.removeItem('flower_current_preview');">
+              <span>Back to Upload Form</span>
+            </a>
+          </div>
+        </div>
 
-          <div class="confidence-block">
-            <div class="conf-header">
-              <span class="conf-label">Model Confidence</span>
-              <span class="conf-value">{{ confidence }}%</span>
+        <!-- Column 2: Prediction Details & Candidates -->
+        <div class="result-details-column">
+
+          <!-- Selected Model Identification Badge (Requirement 7) -->
+          <div class="model-identified-card">
+            <div class="model-badge-top-row">
+              <span class="model-identified-badge {% if model_choice == 'vit' %}vit-theme{% else %}cnn-theme{% endif %}">
+                {% if model_choice == 'vit' %}⚡{% else %}🧠{% endif %} Selected Model
+              </span>
+              <span class="model-family-tag">
+                {% if model_choice == 'vit' %}Transformer Self-Attention{% else %}Convolutional Neural Network{% endif %}
+              </span>
             </div>
-
-            <!-- Progress Bar -->
-            <div class="conf-bar-bg">
-              <div class="conf-bar-fill" id="conf-bar" style="width: 0%;" data-target="{{ confidence }}"></div>
-            </div>
-
-            <!-- Confidence interpretation -->
-            {% if confidence >= 85 %}
-              <p class="conf-note high">✅ High confidence prediction</p>
-            {% elif confidence >= 60 %}
-              <p class="conf-note medium">⚠️ Moderate confidence — result may vary</p>
-            {% else %}
-              <p class="conf-note low">❗ Low confidence — try a clearer image</p>
-            {% endif %}
+            <h3 class="model-identified-name">{{ model_name }}</h3>
+            <p class="model-identified-spec">
+              {% if model_choice == 'vit' %}
+                12 attention heads &bull; 224&times;224 px patches &bull; Verified semantic id2label decoding
+              {% else %}
+                2 Conv blocks &bull; 128 dense units &bull; ImageNet normalized PyTorch baseline
+              {% endif %}
+            </p>
           </div>
 
-          <a href="{{ url_for('index') }}" class="btn btn-primary btn-try">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Try Another Image
-          </a>
+          <!-- Primary Flower Prediction (Requirement 5) -->
+          <div class="primary-prediction-card">
+            <div class="primary-header">
+              <span class="pred-label">Top Prediction</span>
+              <span class="pred-rank-pill">Rank #1</span>
+            </div>
 
-        </div>
+            <h2 class="pred-class-name" id="pred-flower-name">{{ class_name }}</h2>
+
+            <!-- Primary Confidence Display -->
+            <div class="primary-confidence-wrap">
+              <div class="confidence-text-row">
+                <span class="confidence-label">Prediction Confidence</span>
+                <span class="confidence-number" id="primary-confidence-value">{{ confidence }}%</span>
+              </div>
+
+              <!-- Primary Progress Bar -->
+              <div class="progress-track primary-track" role="progressbar" aria-valuenow="{{ confidence }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar-fill primary-fill" id="primary-conf-bar" style="width: 0%;" data-target="{{ confidence }}"></div>
+              </div>
+
+              <!-- Interpretation Note -->
+              <div class="confidence-interpretation">
+                {% if confidence >= 80 %}
+                  <span class="conf-badge high">
+                    <span class="conf-icon">✅</span> High Confidence Identification
+                  </span>
+                  <span class="conf-expl">Visual features closely align with the model's training representations.</span>
+                {% elif confidence >= 50 %}
+                  <span class="conf-badge medium">
+                    <span class="conf-icon">⚠️</span> Moderate Confidence
+                  </span>
+                  <span class="conf-expl">Classification probability is split across similar petal shapes or lighting.</span>
+                {% else %}
+                  <span class="conf-badge low">
+                    <span class="conf-icon">❗</span> Low Confidence / Ambiguous
+                  </span>
+                  <span class="conf-expl">The flower may have unusual angles, occlusions, or belong to an uncovered species.</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Top 3 Predictions with Confidence Progress Bars (Requirement 6) -->
+          <div class="top3-candidates-card">
+            <div class="top3-card-header">
+              <div class="top3-title-group">
+                <h3 class="top3-heading">Top 3 Candidates</h3>
+                <span class="top3-subheading">Ranked by softmax classification probabilities</span>
+              </div>
+              <span class="top3-badge">102 Species</span>
+            </div>
+
+            <div class="top3-list" role="list">
+              {% for item in top3 %}
+              <div class="top3-item {% if loop.first %}rank-first{% endif %}" role="listitem">
+                <div class="top3-item-top">
+                  <div class="top3-name-group">
+                    <span class="candidate-rank-badge rank-{{ loop.index }}">#{{ loop.index }}</span>
+                    <span class="candidate-name">{{ item.class_name.title() }}</span>
+                  </div>
+                  <span class="candidate-score">{{ item.confidence }}%</span>
+                </div>
+
+                <!-- Individual Progress Bar for each of the top three (Requirement 6) -->
+                <div class="candidate-progress-track" role="progressbar" aria-valuenow="{{ item.confidence }}" aria-valuemin="0" aria-valuemax="100">
+                  <div class="candidate-progress-fill rank-fill-{{ loop.index }}"
+                       data-target="{{ item.confidence }}"
+                       style="width: 0%;"></div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Academic & Real-world disclaimer -->
+            <div class="academic-disclaimer">
+              <span class="disclaimer-icon">ℹ️</span>
+              <p class="disclaimer-text">
+                <strong>Benchmark Context:</strong> Standard evaluation metrics measure performance on clean botanical splits. Real-world images may exhibit variations based on ambient garden lighting, focus depth, leaf occlusions, or hybrid petal cultivars.
+              </p>
+            </div>
+          </div>
+
+        </div><!-- /.result-details-column -->
+
       </div><!-- /.result-grid -->
 
     </div><!-- /.result-card -->
+
+    <!-- ════════════ SESSION HISTORY MINI-SECTION ════════════ -->
+    <div class="result-history-wrapper" id="result-history-wrapper" style="display: none;">
+      <div class="result-history-header">
+        <h3 class="result-history-title">🕒 Other Classifications This Session</h3>
+        <button type="button" class="btn btn-sm btn-subtle" id="result-clear-history-btn">
+          Clear Session History
+        </button>
+      </div>
+      <div class="result-history-grid" id="result-history-grid">
+        <!-- Rendered via JavaScript from sessionStorage -->
+      </div>
+    </div>
 
   </div>
 </section>
@@ -73,15 +183,112 @@
 
 {% block extra_scripts %}
 <script>
-  /* Animate the confidence bar on page load */
-  window.addEventListener("load", function () {
-    const bar = document.getElementById("conf-bar");
-    if (bar) {
-      const target = parseFloat(bar.getAttribute("data-target"));
+  /* 1. Animate All Progress Bars (Primary + Top-3) */
+  window.addEventListener("DOMContentLoaded", function () {
+    // Primary bar animation
+    const primaryBar = document.getElementById("primary-conf-bar");
+    if (primaryBar) {
+      const target = parseFloat(primaryBar.getAttribute("data-target")) || 0;
+      setTimeout(function () {
+        primaryBar.style.width = target + "%";
+      }, 150);
+    }
+
+    // Top-3 candidate bars animation
+    const candidateBars = document.querySelectorAll(".candidate-progress-fill");
+    candidateBars.forEach(function (bar, idx) {
+      const target = parseFloat(bar.getAttribute("data-target")) || 0;
       setTimeout(function () {
         bar.style.width = target + "%";
-      }, 200);
+      }, 250 + (idx * 120));
+    });
+
+    // 2. Save Current Prediction into Browser Session Storage (Requirement 8)
+    try {
+      const currentPrediction = {
+        id: Date.now(),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        className: {{ class_name | tojson }},
+        confidence: {{ confidence }},
+        modelName: {{ model_name | tojson }},
+        modelChoice: {{ model_choice | tojson }},
+        imageUrl: {{ image_url | tojson }},
+        top3: {{ top3 | tojson }}
+      };
+
+      let history = [];
+      try {
+        history = JSON.parse(sessionStorage.getItem("flower_pred_history") || "[]");
+      } catch (e) {
+        history = [];
+      }
+
+      // Avoid duplicate insertion on page refresh
+      const isDuplicate = history.length > 0 &&
+                          history[0].className === currentPrediction.className &&
+                          history[0].confidence === currentPrediction.confidence &&
+                          history[0].modelChoice === currentPrediction.modelChoice;
+
+      if (!isDuplicate) {
+        history.unshift(currentPrediction);
+        // Retain up to 10 session items
+        if (history.length > 10) history = history.slice(0, 10);
+        sessionStorage.setItem("flower_pred_history", JSON.stringify(history));
+      }
+
+      // Render mini session history row on result page if more than 1 item
+      renderResultSessionHistory(history);
+    } catch (err) {
+      console.warn("Session storage history update failed:", err);
     }
   });
+
+  function renderResultSessionHistory(history) {
+    const wrapper = document.getElementById("result-history-wrapper");
+    const grid = document.getElementById("result-history-grid");
+    const clearBtn = document.getElementById("result-clear-history-btn");
+
+    if (!wrapper || !grid || !history || history.length <= 1) {
+      if (wrapper) wrapper.style.display = "none";
+      return;
+    }
+
+    // Render items other than the very latest one (which is currently displayed above)
+    const olderItems = history.slice(1);
+    if (olderItems.length === 0) {
+      wrapper.style.display = "none";
+      return;
+    }
+
+    wrapper.style.display = "block";
+    grid.innerHTML = "";
+
+    olderItems.forEach(function (item) {
+      const card = document.createElement("div");
+      card.className = "result-history-card";
+      const modelBadge = item.modelChoice === "vit" ? "⚡ ViT" : "🧠 CNN";
+      card.innerHTML = `
+        <div class="result-hist-thumb-wrap">
+          <img src="${item.imageUrl}" alt="${item.className}" class="result-hist-thumb" onerror="this.style.display='none'" />
+        </div>
+        <div class="result-hist-info">
+          <span class="result-hist-name">${item.className}</span>
+          <div class="result-hist-sub">
+            <span class="result-hist-pill">${modelBadge}</span>
+            <span class="result-hist-conf">${item.confidence}%</span>
+            <span class="result-hist-time">${item.timestamp}</span>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    if (clearBtn) {
+      clearBtn.onclick = function () {
+        sessionStorage.removeItem("flower_pred_history");
+        wrapper.style.display = "none";
+      };
+    }
+  }
 </script>
 {% endblock %}

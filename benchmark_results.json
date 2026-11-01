@@ -1,0 +1,55 @@
+{
+  "benchmark_info": {
+    "script": "benchmark_models.py",
+    "dataset": "Oxford Flowers 102 (official test split, 6149 images)",
+    "device": "cpu",
+    "batch_size": 16,
+    "skip_vit_eval": true,
+    "timing_method": "Forward pass only (model.forward()); image loading and preprocessing are excluded from per-image times. Model loading time measured separately with time.perf_counter().",
+    "label_alignment": {
+      "cnn": "CLASS_NAMES[argmax] matches Flowers102.classes canonical order directly.",
+      "vit": "build_vit_to_canonical_map(): resolves the known 5-class cyclic rotation at indices 16-20 and minor typos (barbeton daisy, pink-yellow dahlia?) by matching cleaned id2label names to canonical Flowers102.classes names."
+    }
+  },
+  "cnn": {
+    "model_id": "FlowerCNN (Custom 2-conv PyTorch CNN)",
+    "checkpoint_path": "D:\\Project\\MIni Project\\AIDS DL project\\Flower\\model\\flower_classification_model.pth",
+    "checkpoint_size_mb": 49.07,
+    "parameters": 12863430,
+    "load_time_seconds": 0.2959,
+    "metrics": {
+      "total_test_images": 6149,
+      "top1_accuracy": 5.6757,
+      "top5_accuracy": 10.766,
+      "avg_inference_ms_per_image": 6.7645,
+      "median_inference_ms_per_image": 5.8263,
+      "rss_before_inference_mb": -1.0,
+      "rss_after_inference_mb": -1.0,
+      "tracemalloc_peak_mb": 3.06,
+      "macro_precision": 8.0953,
+      "macro_recall": 8.0577,
+      "macro_f1": 7.838
+    }
+  },
+  "vit": {
+    "model_id": "loretyan/vit-base-oxford-flowers-102",
+    "checkpoint_size_mb": 327.6,
+    "parameters": 86567642,
+    "load_time_seconds": null,
+    "metrics": {
+      "total_test_images": 6149,
+      "top1_accuracy": 99.72,
+      "top5_accuracy": 100.0,
+      "macro_f1": 99.74,
+      "macro_precision": null,
+      "macro_recall": null,
+      "avg_inference_ms_per_image": null,
+      "median_inference_ms_per_image": null,
+      "rss_before_inference_mb": null,
+      "rss_after_inference_mb": null,
+      "tracemalloc_peak_mb": null,
+      "note": "Loaded from oxford_vit_evaluation_metrics.json (semantic-aligned metrics). Run without --skip-vit-eval for full timing.",
+      "source_file": "D:\\Project\\MIni Project\\AIDS DL project\\Flower\\oxford_vit_evaluation_metrics.json"
+    }
+  }
+}

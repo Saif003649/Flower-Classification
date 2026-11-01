@@ -1,11 +1,20 @@
 """
-Flower Classification Model — Complete Test & Evaluation Script
-Runs inference on all images found in static/uploads/
-Also shows: top-5 predictions, confidence for each image,
-model summary, parameter count, and per-class probabilities.
+Flower Classification — Model Test & Verification Script
+Supports both:
+1. Custom CNN (PyTorch baseline from model/flower_classification_model.pth)
+2. Vision Transformer (ViT-Base from loretyan/vit-base-oxford-flowers-102)
+
+Usage:
+  python test_model.py               # Tests both models
+  python test_model.py --model cnn   # Tests only Custom CNN
+  python test_model.py --model vit   # Tests only Vision Transformer
 """
 
-import os, sys, time, warnings
+import os
+import sys
+import time
+import argparse
+import warnings
 warnings.filterwarnings("ignore")
 
 import torch
@@ -13,42 +22,44 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from PIL import Image
 
-# ── Path setup ──────────────────────────────────────────────────────────────
-BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "model", "flower_classification_model.pth")
-IMG_DIR    = os.path.join(BASE_DIR, "static", "uploads")
+# ── Paths ───────────────────────────────────────────────────────────────────
+BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
+CNN_MODEL_PATH = os.path.join(BASE_DIR, "model", "flower_classification_model.pth")
+VIT_MODEL_ID   = "loretyan/vit-base-oxford-flowers-102"
+IMG_DIR        = os.path.join(BASE_DIR, "static", "uploads")
+DEVICE         = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DIVIDER        = "=" * 70
 
-# ── Class Labels (102 Oxford Flowers) ───────────────────────────────────────
-CLASS_NAMES = [
-    "pink primrose","hard-leaved pocket orchid","canterbury bells",
-    "sweet pea","english marigold","tiger lily","moon orchid",
-    "bird of paradise","monkshood","globe thistle","snapdragon",
-    "colt's foot","king protea","spear thistle","yellow iris",
-    "globe-flower","purple coneflower","peruvian lily","balloon flower",
-    "giant white arum lily","fire lily","pincushion flower","fritillary",
-    "red ginger","grape hyacinth","corn poppy","prince of wales feathers",
-    "stemless gentian","artichoke","sweet william","carnation",
-    "garden phlox","love in the mist","mexican aster","alpine sea holly",
-    "ruby-lipped cattleya","cape flower","great masterwort","siam tulip",
-    "lenten rose","barberton daisy","daffodil","sword lily",
-    "poinsettia","bolero deep blue","wallflower","marigold",
-    "buttercup","oxeye daisy","common dandelion","petunia",
-    "wild pansy","primula","sunflower","pelargonium",
-    "bishop of llandaff","gaura","geranium","orange dahlia",
-    "pink-yellow dahlia","cautleya spicata","japanese anemone",
-    "black-eyed susan","silverbush","californian poppy","osteospermum",
-    "spring crocus","iris","windflower","tree poppy","gazania",
-    "azalea","water lily","rose","thorn apple","morning glory",
-    "passion flower","lotus","toad lily","anthurium","frangipani",
-    "clematis","hibiscus","columbine","desert-rose","tree mallow",
-    "magnolia","cyclamen","watercress","canna lily","hippeastrum",
-    "bee balm","ball moss","foxglove","bougainvillea","camellia",
-    "mallow","mexican petunia","bromelia","blanket flower",
-    "trumpet creeper","blackberry lily",
+# ── Canonical Oxford 102 Class Names (for CNN) ──────────────────────────────
+CNN_CLASS_NAMES = [
+    "pink primrose", "hard-leaved pocket orchid", "canterbury bells",
+    "sweet pea", "english marigold", "tiger lily", "moon orchid",
+    "bird of paradise", "monkshood", "globe thistle", "snapdragon",
+    "colt's foot", "king protea", "spear thistle", "yellow iris",
+    "globe-flower", "purple coneflower", "peruvian lily", "balloon flower",
+    "giant white arum lily", "fire lily", "pincushion flower", "fritillary",
+    "red ginger", "grape hyacinth", "corn poppy", "prince of wales feathers",
+    "stemless gentian", "artichoke", "sweet william", "carnation",
+    "garden phlox", "love in the mist", "mexican aster", "alpine sea holly",
+    "ruby-lipped cattleya", "cape flower", "great masterwort", "siam tulip",
+    "lenten rose", "barberton daisy", "daffodil", "sword lily",
+    "poinsettia", "bolero deep blue", "wallflower", "marigold",
+    "buttercup", "oxeye daisy", "common dandelion", "petunia",
+    "wild pansy", "primula", "sunflower", "pelargonium",
+    "bishop of llandaff", "gaura", "geranium", "orange dahlia",
+    "pink-yellow dahlia", "cautleya spicata", "japanese anemone",
+    "black-eyed susan", "silverbush", "californian poppy", "osteospermum",
+    "spring crocus", "iris", "windflower", "tree poppy", "gazania",
+    "azalea", "water lily", "rose", "thorn apple", "morning glory",
+    "passion flower", "lotus", "toad lily", "anthurium", "frangipani",
+    "clematis", "hibiscus", "columbine", "desert-rose", "tree mallow",
+    "magnolia", "cyclamen", "watercress", "canna lily", "hippeastrum",
+    "bee balm", "ball moss", "foxglove", "bougainvillea", "camellia",
+    "mallow", "mexican petunia", "bromelia", "blanket flower",
+    "trumpet creeper", "blackberry lily",
 ]
-NUM_CLASSES = len(CLASS_NAMES)
 
-# ── Model Architecture ───────────────────────────────────────────────────────
+# ── CNN Architecture ────────────────────────────────────────────────────────
 class FlowerCNN(nn.Module):
     def __init__(self, num_classes=102):
         super().__init__()
@@ -65,142 +76,140 @@ class FlowerCNN(nn.Module):
             nn.ReLU(inplace=True),
             nn.Linear(128, num_classes),
         )
+
     def forward(self, x):
         x = self.features(x)
         x = x.view(x.size(0), -1)
         return self.classifier(x)
 
-# ── Transforms ───────────────────────────────────────────────────────────────
-transform = transforms.Compose([
+cnn_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
 ])
 
-DIVIDER = "=" * 65
+def clean_label(name: str) -> str:
+    n = str(name).strip().rstrip("?")
+    if n.lower() == "barbeton daisy":
+        return "barberton daisy"
+    return n
 
-# ── 1. Model Info ────────────────────────────────────────────────────────────
-print(f"\n{DIVIDER}")
-print("  FLOWER CLASSIFICATION MODEL — TEST REPORT")
-print(f"{DIVIDER}")
+def test_cnn(images):
+    print(f"\n{DIVIDER}")
+    print("  EVALUATING MODEL 1: CUSTOM CNN (PyTorch)")
+    print(f"{DIVIDER}")
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"\n  Device        : {device}")
-print(f"  Model file    : {os.path.basename(MODEL_PATH)}")
-print(f"  Model size    : {os.path.getsize(MODEL_PATH) / 1e6:.2f} MB")
-print(f"  Output classes: {NUM_CLASSES}")
-print(f"  Input size    : 224 × 224")
+    if not os.path.exists(CNN_MODEL_PATH):
+        print(f"[-] Checkpoint not found: {CNN_MODEL_PATH}")
+        return
 
-# ── 2. Load Model ────────────────────────────────────────────────────────────
-print(f"\n{DIVIDER}")
-print("  LOADING MODEL")
-print(DIVIDER)
+    model = FlowerCNN(num_classes=len(CNN_CLASS_NAMES))
+    state = torch.load(CNN_MODEL_PATH, map_location=DEVICE, weights_only=True)
+    if isinstance(state, dict) and "model_state_dict" in state:
+        model.load_state_dict(state["model_state_dict"])
+    elif isinstance(state, dict) and "state_dict" in state:
+        model.load_state_dict(state["state_dict"])
+    else:
+        model.load_state_dict(state)
+    model.to(DEVICE)
+    model.eval()
 
-model = FlowerCNN(NUM_CLASSES)
-t0    = time.time()
-state = torch.load(MODEL_PATH, map_location=device)
-model.load_state_dict(state)
-model.to(device)
-model.eval()
-load_time = time.time() - t0
+    print(f"Loaded: {os.path.basename(CNN_MODEL_PATH)}")
+    print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 
-total_params   = sum(p.numel() for p in model.parameters())
-trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    for idx, fname in enumerate(images, 1):
+        img_path = os.path.join(IMG_DIR, fname)
+        try:
+            img = Image.open(img_path).convert("RGB")
+            tensor = cnn_transform(img).unsqueeze(0).to(DEVICE)
 
-print(f"\n  ✅ Model loaded in  : {load_time:.3f} s")
-print(f"  Total parameters    : {total_params:,}")
-print(f"  Trainable parameters: {trainable_params:,}")
+            t0 = time.time()
+            with torch.no_grad():
+                logits = model(tensor)
+                probs = torch.softmax(logits, dim=1)[0]
+            lat_ms = (time.time() - t0) * 1000
 
-# ── 3. Layer Summary ─────────────────────────────────────────────────────────
-print(f"\n{DIVIDER}")
-print("  LAYER SUMMARY")
-print(DIVIDER)
-print(f"\n  {'Layer':<35} {'Output Shape':<22} {'Params':>10}")
-print(f"  {'-'*35} {'-'*22} {'-'*10}")
+            top3_probs, top3_idx = torch.topk(probs, k=3)
+            print(f"\n  Image [{idx}]: {fname} (Inference: {lat_ms:.1f} ms)")
+            for r, (p, i) in enumerate(zip(top3_probs, top3_idx), 1):
+                lbl = CNN_CLASS_NAMES[i.item()].title()
+                print(f"    #{r} {lbl:<26} ({p.item()*100:.2f}%)")
+        except Exception as e:
+            print(f"  [-] Error on {fname}: {e}")
 
-layer_info = [
-    ("Conv2d-1  (3→16, k=3, p=1)",   "[B, 16, 224, 224]",  16*3*3*3 + 16),
-    ("ReLU-1",                         "[B, 16, 224, 224]",  0),
-    ("MaxPool2d-1  (2×2)",             "[B, 16, 112, 112]",  0),
-    ("Conv2d-2  (16→32, k=3, p=1)",   "[B, 32, 112, 112]",  32*16*3*3 + 32),
-    ("ReLU-2",                         "[B, 32, 112, 112]",  0),
-    ("MaxPool2d-2  (2×2)",             "[B, 32,  56,  56]",  0),
-    ("Flatten",                        "[B, 100352]",         0),
-    ("Linear  (100352 → 128)",         "[B, 128]",            100352*128 + 128),
-    ("ReLU-3",                         "[B, 128]",            0),
-    ("Linear  (128 → 102)",            "[B, 102]",            128*102 + 102),
-]
-for name, shape, params in layer_info:
-    print(f"  {name:<35} {shape:<22} {params:>10,}")
-print(f"  {'─'*35} {'─'*22} {'─'*10}")
-print(f"  {'TOTAL':<35} {'':22} {total_params:>10,}")
+def test_vit(images):
+    print(f"\n{DIVIDER}")
+    print("  EVALUATING MODEL 2: VISION TRANSFORMER (ViT-Base)")
+    print(f"{DIVIDER}")
 
-# ── 4. Inference on Uploaded Images ─────────────────────────────────────────
-print(f"\n{DIVIDER}")
-print("  INFERENCE ON TEST IMAGES")
-print(DIVIDER)
-
-valid_exts = {".jpg", ".jpeg", ".png"}
-images = [
-    f for f in os.listdir(IMG_DIR)
-    if os.path.splitext(f)[1].lower() in valid_exts
-]
-
-if not images:
-    print("\n  ⚠  No images found in static/uploads/")
-    print("     Upload some images via the web app first, then re-run.\n")
-    sys.exit(0)
-
-print(f"\n  Found {len(images)} image(s) to test.\n")
-
-results = []
-for idx, fname in enumerate(images, 1):
-    img_path = os.path.join(IMG_DIR, fname)
     try:
-        img    = Image.open(img_path).convert("RGB")
-        w, h   = img.size
-        tensor = transform(img).unsqueeze(0).to(device)
+        from transformers import AutoImageProcessor, AutoModelForImageClassification
+    except ImportError:
+        print("[-] transformers is not installed. Run: pip install transformers")
+        return
 
-        t_start = time.time()
-        with torch.no_grad():
-            logits = model(tensor)
-            probs  = torch.softmax(logits, dim=1)
-        infer_ms = (time.time() - t_start) * 1000
+    try:
+        processor = AutoImageProcessor.from_pretrained(VIT_MODEL_ID)
+        model = AutoModelForImageClassification.from_pretrained(VIT_MODEL_ID)
+        model.to(DEVICE)
+        model.eval()
 
-        top5_probs, top5_idx = torch.topk(probs, 5, dim=1)
-        top5 = [(CLASS_NAMES[i], round(p * 100, 2))
-                for i, p in zip(top5_idx[0].tolist(), top5_probs[0].tolist())]
-
-        pred_class  = top5[0][0]
-        pred_conf   = top5[0][1]
-        results.append((fname, pred_class, pred_conf))
-
-        print(f"  ── Image {idx}: {fname}")
-        print(f"     Size         : {w} × {h} px")
-        print(f"     Inference    : {infer_ms:.1f} ms")
-        print(f"     ✅ Prediction : {pred_class.upper()}  ({pred_conf}%)")
-        print(f"     Top-5 Results:")
-        for rank, (cls, conf) in enumerate(top5, 1):
-            bar = "█" * int(conf / 5)
-            print(f"       {rank}. {cls:<30}  {conf:6.2f}%  {bar}")
-        print()
-
+        vit_id2label = {int(k): clean_label(v) for k, v in model.config.id2label.items()}
+        print(f"Loaded: {VIT_MODEL_ID}")
+        print(f"Classes: {len(vit_id2label)}")
     except Exception as e:
-        print(f"  ❌ Error on {fname}: {e}\n")
+        print(f"[-] Error loading ViT model: {e}")
+        return
 
-# ── 5. Summary Table ─────────────────────────────────────────────────────────
-print(f"{DIVIDER}")
-print("  SUMMARY")
-print(DIVIDER)
-print(f"\n  {'#':<4} {'Image File':<44} {'Predicted Class':<28} {'Confidence':>10}")
-print(f"  {'─'*4} {'─'*44} {'─'*28} {'─'*10}")
-for i, (fname, cls, conf) in enumerate(results, 1):
-    short = fname[:42] + ".." if len(fname) > 44 else fname
-    print(f"  {i:<4} {short:<44} {cls.title():<28} {conf:>9.2f}%")
+    for idx, fname in enumerate(images, 1):
+        img_path = os.path.join(IMG_DIR, fname)
+        try:
+            img = Image.open(img_path).convert("RGB")
+            inputs = processor(images=img, return_tensors="pt").to(DEVICE)
 
-print(f"\n{DIVIDER}")
-print("  NOTE: No labelled test dataset was provided.")
-print("  Accuracy cannot be computed without ground-truth labels.")
-print("  The predictions above show raw model output on uploaded images.")
-print(f"{DIVIDER}\n")
+            t0 = time.time()
+            with torch.inference_mode():
+                outputs = model(**inputs)
+                probs = torch.softmax(outputs.logits, dim=-1)[0]
+            lat_ms = (time.time() - t0) * 1000
+
+            top3_probs, top3_idx = torch.topk(probs, k=3)
+            print(f"\n  Image [{idx}]: {fname} (Inference: {lat_ms:.1f} ms)")
+            for r, (p, i) in enumerate(zip(top3_probs, top3_idx), 1):
+                lbl = vit_id2label.get(i.item(), f"Class {i.item()}").title()
+                print(f"    #{r} {lbl:<26} ({p.item()*100:.2f}%)")
+        except Exception as e:
+            print(f"  [-] Error on {fname}: {e}")
+
+def main():
+    parser = argparse.ArgumentParser(description="Test Flower Classification Models")
+    parser.add_argument("--model", choices=["both", "cnn", "vit"], default="both",
+                        help="Which model to test (default: both)")
+    args = parser.parse_args()
+
+    print(f"\n{DIVIDER}")
+    print("  FLOWER CLASSIFICATION — MODEL TEST RUNNER")
+    print(f"{DIVIDER}")
+    print(f"Device: {DEVICE}")
+
+    valid_exts = {".jpg", ".jpeg", ".png"}
+    images = [f for f in sorted(os.listdir(IMG_DIR)) if os.path.splitext(f)[1].lower() in valid_exts]
+    if not images:
+        print(f"[-] No test images found in {IMG_DIR}")
+        return
+
+    print(f"Found {len(images)} test image(s) in static/uploads/")
+
+    if args.model in ("both", "cnn"):
+        test_cnn(images)
+
+    if args.model in ("both", "vit"):
+        test_vit(images)
+
+    print(f"\n{DIVIDER}")
+    print("  Test run completed successfully.")
+    print(f"{DIVIDER}\n")
+
+if __name__ == "__main__":
+    main()
